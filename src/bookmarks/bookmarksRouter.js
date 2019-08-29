@@ -1,19 +1,24 @@
 'use strict';
 const express = require('express');
-const bookmarkRouter = express.Router();
 const jsonParser = express.json();
 const { isWebUri } = require('valid-url');
 const uuid = require('uuid/v4');
+const logger = require('../logger');
+const store = require('../../test/store');
+const BookmarksService= require('./bookmarks-service');
 
-let bookmarks = require('./bookmarks');
+const bookmarksRouter = express.Router();
 
-const regexURL = /(?:(?:http|https):\/\/)?([-a-zA-Z0-9.]{2,256}\.[a-z]{2,10})\b(?:\/[-a-zA-Z0-9@:%_+.~#?&//=]*)?/
+let bookmarks = store.bookmarks;
 
-bookmarkRouter
+bookmarksRouter
     .route('/bookmarks')
-    .get((req, res) => {
-        return res
-            .json(bookmarks);
+    .get((req, res, next) => {
+        BookmarksService.getAllBookmarks(req.app.get('db'))
+            .then(articles => {
+                res.json(articles);
+            })
+            .catch(next);
     })
     .post(jsonParser, (req, res) => {
         //destructure req data
@@ -33,7 +38,7 @@ bookmarkRouter
         if(!url) {
             return res
                 .status(400)
-                .send("A url is required.");
+                .send('A url is required.');
         }
         if(!isWebUri(url)) {
             return res
@@ -84,17 +89,14 @@ bookmarkRouter
             .send(newBookmark);
     });
 
-bookmarkRouter
+bookmarksRouter
     .route('/bookmarks/:id')
-    .get( (req, res) => {
-        const bookmarkid = req.params.id;
-        const results = bookmarks.filter(obj => obj.id === bookmarkid);
-        if(results.length === 0) {
-            return res
-                .status(404);
-        }
-        return res
-            .json(results);
+    .get( (req, res, next) => {
+        BookmarksService.getById(req.app.get('db'), req.params.id)
+            .then(article => {
+                res.json(article);
+            })
+            .catch(next);
     })
     .delete( (req, res) => {
         const bookmarkId = req.params.id;
@@ -111,4 +113,4 @@ bookmarkRouter
             .send(bookmarkId);
     });
 
-module.exports = bookmarkRouter;
+module.exports = bookmarksRouter;
