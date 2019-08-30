@@ -1,10 +1,9 @@
 'use strict';
+
+const path = require('path');
 const express = require('express');
 const xss = require('xss');
 const jsonParser = express.json();
-const { isWebUri } = require('valid-url');
-const uuid = require('uuid/v4');
-// const logger = require('../logger');
 const BookmarksService= require('./bookmarks-service');
 
 const bookmarksRouter = express.Router();
@@ -48,7 +47,7 @@ bookmarksRouter
             .then(article => {
                 res
                     .status(201)
-                    .location(`/bookmarks/${article.id}`)
+                    .location(path.posix.join(req.originalUrl + `/${article.id}`))
                     .json(article);
             })
             .catch(next);
@@ -66,7 +65,7 @@ bookmarksRouter
             .then(bookmark => {
                 if(!bookmark) {
                     return res.status(404).json({
-                        error: { message: `Bookmark doesn't exist` }
+                        error: { message: `Bookmark doesn't exist` } // eslint-disable-line quotes
                     });
                 }
                 res.bookmark = bookmark;
@@ -74,9 +73,10 @@ bookmarksRouter
             })
             .catch(next);
     })
-
-    .get( (req, res, next) => {
-        res.json(serializeBookmark(res.bookmark));
+    
+    .get( (req, res, next) => { // eslint-disable-line no-unused-vars
+        res
+            .json(serializeBookmark(res.bookmark));
     })
 
     .delete( (req, res, next) => {
@@ -85,6 +85,32 @@ bookmarksRouter
             req.params.bookmarkId
         )
             .then(() => {
+                res.status(204).end();
+            })
+            .catch(next);
+    })
+
+    .patch(jsonParser, (req, res, next) => {
+        
+        const { title, url, description, rating } = req.body;
+        
+        const bookmarkToUpdate = { title, url, description, rating };
+
+        const numberOfValues = Object.values(bookmarkToUpdate).filter(Boolean).length;
+        if(numberOfValues === 0) {
+            return res.status(400).json({
+                error: {
+                    message: `Request body must contain either 'title', 'url', 'description', or 'rating'.`  // eslint-disable-line quotes
+                }
+            });
+        }
+
+        BookmarksService.updateBookmark(
+            req.app.get('db'),
+            req.params.bookmarkId,
+            bookmarkToUpdate
+        )
+            .then(numRowsAffected => {
                 res.status(204).end();
             })
             .catch(next);

@@ -19,8 +19,13 @@ const BookmarksService = {
             .into('bookmarks')
             .returning('*')
             .then(rows => {
-                return rows[0]
+                return rows[0];
             });
+    },
+    updateBookmark(knex, id, newBookmarkFields) {
+        return knex('bookmarks')
+            .where({ id })
+            .update(newBookmarkFields);
     },
     deleteBookmark(knex, id) {
         return knex('bookmarks')
@@ -37,6 +42,5 @@ const BookmarksService = {
 //             .where({ id })
 //             .update(newArticleFields);
 //     }
-};
 
 module.exports = BookmarksService;

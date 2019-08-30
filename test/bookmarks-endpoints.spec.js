@@ -4,7 +4,6 @@ require('dotenv').config();
 const knex = require('knex');
 
 const app = require('../src/app');
-const store = require('./store');
 
 describe('Bookmarks Endpoints', () => {
 
@@ -57,18 +56,18 @@ describe('Bookmarks Endpoints', () => {
                 .insert(testBookmarks);
         });
 
-        it('Get /bookmarks responds with 200 and all of the bookmarks', () => {
+        it('Get /api/bookmarks responds with 200 and all of the bookmarks', () => {
             return supertest(app)
-                .get('/bookmarks')
+                .get('/api/bookmarks')
                 .set('Authorization', `Bearer ${process.env.API_Token}`)
                 .expect(200, testBookmarks);
         });
 
-        it('GET /bookmarks/:bookmark_id responds with 200 and the specified article', () => {
+        it('GET /api/bookmarks/:bookmark_id responds with 200 and the specified article', () => {
             const bookmarkId = 2;
             const expectedbookmark = testBookmarks[bookmarkId - 1];
             return supertest(app)
-                .get(`/bookmarks/${bookmarkId}`)
+                .get(`/api/bookmarks/${bookmarkId}`)
                 .set('Authorization', `Bearer ${process.env.API_Token}`)
                 .expect(200, expectedbookmark);
         });
@@ -87,24 +86,24 @@ describe('Bookmarks Endpoints', () => {
         beforeEach('insert malicious article', () => {
             return db
                 .into('bookmarks')
-                .insert([ maliciousArticle ])
+                .insert([ maliciousArticle ]);
         });
 
         it('removes XSS attack content', () => {
             return supertest(app)
-                .get(`/bookmarks/${maliciousArticle.id}`)
+                .get(`/api/bookmarks/${maliciousArticle.id}`)
                 .set('Authorization', `Bearer ${process.env.API_Token}`)
                 .expect(200)
                 .expect(res => {
-                    expect(res.body.title).to.eql('Naughty naughty very naughty &lt;script&gt;alert(\"xss\");&lt;/script&gt;');
-                    expect(res.body.url).to.eql('https://www.Thinkful.com')
+                    expect(res.body.title).to.eql('Naughty naughty very naughty &lt;script&gt;alert(\"xss\");&lt;/script&gt;');  // eslint-disable-line no-useless-escape
+                    expect(res.body.url).to.eql('https://www.Thinkful.com');
                     expect(res.body.description).to.eql('Bad image <img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.');
                     expect(res.body.rating).to.eql('1');
                 });
         });
     });
 
-    context('Post /articles', () => {
+    context('Post /api/bookmarks', () => {
         
         it('creates a bookmark, responding with 201 and the new bookmark', () => {
             
@@ -116,7 +115,7 @@ describe('Bookmarks Endpoints', () => {
             };
 
             return supertest(app)
-                .post('/bookmarks')
+                .post('/api/bookmarks')
                 .set('Authorization', `Bearer ${process.env.API_Token}`)
                 .send(newArticle)
                 .expect(201)
@@ -126,18 +125,18 @@ describe('Bookmarks Endpoints', () => {
                     expect(res.body.description).to.eql(newArticle.description);
                     expect(res.body.rating).to.eql(newArticle.rating);
                     expect(res.body).to.have.property('id');
-                    expect(res.headers.location).to.equal(`/bookmarks/${res.body.id}`);
+                    expect(res.headers.location).to.equal(`/api/bookmarks/${res.body.id}`);
                 })
                 .then(postRes => {
                     supertest(app)
-                        .get(`/bookmarks/${postRes.body.id}`)
+                        .get(`/api/bookmarks/${postRes.body.id}`)
                         .expect(postRes.body);
                 });
         });
 
         it('responds with 400 and an error message when the title is missing', () => {
             return supertest(app)
-                .post('/bookmarks')
+                .post('/api/bookmarks')
                 .set('Authorization', `Bearer ${process.env.API_Token}`)
                 .send({
                     // title: 'Thinkful',
@@ -152,7 +151,7 @@ describe('Bookmarks Endpoints', () => {
 
         it('responds with 400 and an error message when the url is missing', () => {
             return supertest(app)
-                .post('/bookmarks')
+                .post('/api/bookmarks')
                 .set('Authorization', `Bearer ${process.env.API_Token}`)
                 .send({
                     title: 'Thinkful',
@@ -167,7 +166,7 @@ describe('Bookmarks Endpoints', () => {
 
         it('responda with 400 and an error message when the description is missing', () => {
             return supertest(app)
-                .post('/bookmarks')
+                .post('/api/bookmarks')
                 .set('Authorization', `Bearer ${process.env.API_Token}`)
                 .send({
                     title: 'Thinkful',
@@ -182,7 +181,7 @@ describe('Bookmarks Endpoints', () => {
 
         it('responds with 400 and an error message when the rating is missing', () => {
             return supertest(app)
-                .post('/bookmarks')
+                .post('/api/bookmarks')
                 .set('Authorization', `Bearer ${process.env.API_Token}`)
                 .send({
                     title: 'Thinkful',
@@ -194,33 +193,9 @@ describe('Bookmarks Endpoints', () => {
                     error: { message: `Missing 'rating' in request body.` } // eslint-disable-line quotes
                 });
         });
-
-        // const requiredFields = ['title', 'url', 'description', 'rating'];
-
-        // requiredFields.forEach(field => {
-        //     const newArticle = {
-        //         title: 'Thinkful',
-        //         url: 'https://www.thinkful.com',
-        //         description: 'Think outside the classroom',
-        //         rating: '5'
-        //     };
-
-        //     it(`responds with 400 and an error message when the '${field}' is missing`, () => {
-                
-        //         delete newArticle[field];
-
-        //         return supertest(app)
-        //             .post('/bookmarks')
-        //             .set('Authorization', `Bearer ${process.env.API_Token}`)
-        //             .send({newArticle})
-        //             .expect(400, {
-        //                 error: { message: `Missing '${field}' in request body.` }
-        //             });
-        //     });
-        // });
     });
 
-    context('DELETE /bookmarks/:bookmarksId', () => {
+    context('DELETE /api/bookmarks/:bookmarksId', () => {
         
         beforeEach('insert bookmarks', () => {
             return db
@@ -234,25 +209,25 @@ describe('Bookmarks Endpoints', () => {
 
             const expectedBookmarks = testBookmarks.filter(bookmark => bookmark.id !== idToRemove);
             return supertest(app)
-                .delete(`/bookmarks/${idToRemove}`)
+                .delete(`/api/bookmarks/${idToRemove}`)
                 .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
                 .expect(204)
-                .then(res => {
+                .then(() => {
                     supertest(app)
-                        .get('/bookmarks')
+                        .get('/api/bookmarks')
                         .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
                         .expect(expectedBookmarks);
                 });
         });
     });
 
-    context('Delete /bookmarks/:bookmarksId Given no bookmarks', () => {
+    context('Delete /api/bookmarks/:bookmarksId Given no bookmarks', () => {
         it('responds with 404', () => {
             
             const bookmarkId = 1234567890;
 
             return supertest(app)
-                .delete(`/bookmarks/${bookmarkId}`)
+                .delete(`/api/bookmarks/${bookmarkId}`)
                 .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
                 .expect(404, {
                     error: { message: `Bookmark doesn't exist`} // eslint-disable-line quotes
@@ -261,5 +236,102 @@ describe('Bookmarks Endpoints', () => {
         });
     });
 
+    describe('PATCH /api/bookmarks/;bookmarkId', () => {
+        
+        context('Given no articles', () => {
 
+            it('responds with 404', () => {
+                
+                const bookmarkId = 1234567890;
+
+                return supertest(app)
+                    .patch(`/api/bookmarks/${bookmarkId}`)
+                    .set('Authorization', `Bearer ${process.env.API_Token}`)
+                    .expect(404, {error: { message: `Bookmark doesn't exist` }}); // eslint-disable-line quotes
+            });
+        });
+
+        context('Given there are bookmarks in the database', () => {
+
+            beforeEach('insert bookmarks', () => {
+                return db 
+                    .into('bookmarks')
+                    .insert(testBookmarks);
+            });
+
+            it('responds with 204 and updates the bookmark', () => {
+                
+                const idToUpdate = 2;
+                
+                const updateBookmark = {
+                    title: 'An Updated title',
+                    url: 'https://update-url.com',
+                    description: 'A new description goes here.',
+                    rating: '2',
+                };
+                
+                const expectedBookmark = {
+                    ...testBookmarks[idToUpdate -1], 
+                    ...updateBookmark
+                }
+                
+                return supertest(app)
+                    .patch(`/api/bookmarks/${idToUpdate}`)
+                    .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                    .send(updateBookmark)
+                    .expect(204)
+                    .then(res => {
+                        supertest(app)
+                            .get(`/api/articles/${idToUpdate}`)
+                            .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                            .expect(expectedBookmark);
+                    });
+            });
+
+            it('responds with 400 when no required fields supplied', () => {
+                const idToUpdate = 2;
+                return supertest(app)
+                    .patch(`/api/bookmarks/${idToUpdate}`)
+                    .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                    .send({ irrelevnetField: 'foo' })
+                    .expect(400, {
+                        error: {
+                            message: `Request body must contain either 'title', 'url', 'description', or 'rating'.`
+                        }
+                    });
+            });
+
+            it('responds with 204 when updating only a subset of fields', () => {
+                
+                const idToUpdate = 2;
+
+                const updateBookmark = {
+                    title: 'A Updated Title - only updated field'
+                }
+
+                const expectedBookmark = {
+                    ...testBookmarks[idToUpdate -1],
+                    ...updateBookmark
+                }
+
+                return supertest(app)
+                    .patch(`/api/bookmarks/${idToUpdate}`)
+                    .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                    .send({
+                        ...updateBookmark,
+                        fieldToIgnore: 'should not be in GET response'
+                    })
+                    .expect(204)
+                    .then(res => {
+                        supertest(app)
+                            .get(`/api/bookmarks/${idToUpdate}`)
+                            .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                            .expect(expectedBookmark)
+                    });
+            });
+
+        });
+    });
 });
+
+

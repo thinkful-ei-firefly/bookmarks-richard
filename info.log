@@ -13,3 +13,25 @@
 {"message":"key is not defined","level":"error"}
 {"message":"BookmarksService.deleteArticle is not a function","level":"error"}
 {"message":"BookmarksService.deleteArticle is not a function","level":"error"}
+{"message":"res.json(...).catch is not a function","level":"error"}
+{"message":"res.json(...).catch is not a function","level":"error"}
+{"message":"res.json(...).catch is not a function","level":"error"}
+{"message":"res.json(...).catch is not a function","level":"error"}
+{"message":"res.json(...).catch is not a function","level":"error"}
+{"message":"res.json(...).catch is not a function","level":"error"}
+{"message":"res.json(...).catch is not a function","level":"error"}
+{"message":"res.json(...).catch is not a function","level":"error"}
+{"message":"res.json(...).catch is not a function","level":"error"}
+{"message":"res.json(...).catch is not a function","level":"error"}
+{"message":"res.json(...).catch is not a function","level":"error"}
+{"message":"res.json(...).catch is not a function","level":"error"}
+{"message":"BookmarksService.updateBookmark is not a function","level":"error"}
+{"message":"res.json(...).catch is not a function","level":"error"}
+{"message":"res.json(...).catch is not a function","level":"error"}
+{"message":"Empty .update() call detected! Update data does not contain any values to update. This will result in a faulty query.","level":"error"}
+{"message":"res.json(...).catch is not a function","level":"error"}
+{"message":"res.json(...).catch is not a function","level":"error"}
+{"message":"Empty .update() call detected! Update data does not contain any values to update. This will result in a faulty query.","level":"error"}
+{"message":"Empty .update() call detected! Update data does not contain any values to update. This will result in a faulty query.","level":"error"}
+{"message":"Empty .update() call detected! Update data does not contain any values to update. This will result in a faulty query.","level":"error"}
+{"message":"Empty .update() call detected! Update data does not contain any values to update. This will result in a faulty query.","level":"error"}
