@@ -48,62 +48,47 @@ describe('Bookmarks Endpoints', () => {
 
     afterEach('cleanup', () => db('bookmarks').truncate());
 
-    context('Given there are bookmarks in the database', () => {
+    describe('GET, /api/bookmarks', () => {
 
-        beforeEach('insert bookmarks', () => {
-            return db
-                .into('bookmarks')
-                .insert(testBookmarks);
-        });
+        context('Given there are bookmarks in the database', () => {
 
-        it('Get /api/bookmarks responds with 200 and all of the bookmarks', () => {
-            return supertest(app)
-                .get('/api/bookmarks')
-                .set('Authorization', `Bearer ${process.env.API_Token}`)
-                .expect(200, testBookmarks);
-        });
-
-        it('GET /api/bookmarks/:bookmark_id responds with 200 and the specified article', () => {
-            const bookmarkId = 2;
-            const expectedbookmark = testBookmarks[bookmarkId - 1];
-            return supertest(app)
-                .get(`/api/bookmarks/${bookmarkId}`)
-                .set('Authorization', `Bearer ${process.env.API_Token}`)
-                .expect(200, expectedbookmark);
+            beforeEach('insert bookmarks', () => {
+                return db
+                    .into('bookmarks')
+                    .insert(testBookmarks);
+            });
+    
+            it('Responds with 200 and all of the bookmarks', () => {
+                return supertest(app)
+                    .get('/api/bookmarks')
+                    .set('Authorization', `Bearer ${process.env.API_Token}`)
+                    .expect(200, testBookmarks);
+            });
         });
     });
 
-    context('Given an XSS attack article', () => {
+    describe('GET, /api/bookmarks/:bookmakId', () => {
 
-        const maliciousArticle = {
-            id: 911,
-            title: 'Naughty naughty very naughty <script>alert("xss");</script>',
-            url: 'https://www.Thinkful.com',
-            description: 'Bad image <img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.',
-            rating: '1'
-        };
+        context('Given there are bookmarks in the database', () => {
 
-        beforeEach('insert malicious article', () => {
-            return db
-                .into('bookmarks')
-                .insert([ maliciousArticle ]);
-        });
+            beforeEach('insert bookmarks', () => {
+                return db
+                    .into('bookmarks')
+                    .insert(testBookmarks);
+            });
 
-        it('removes XSS attack content', () => {
-            return supertest(app)
-                .get(`/api/bookmarks/${maliciousArticle.id}`)
-                .set('Authorization', `Bearer ${process.env.API_Token}`)
-                .expect(200)
-                .expect(res => {
-                    expect(res.body.title).to.eql('Naughty naughty very naughty &lt;script&gt;alert(\"xss\");&lt;/script&gt;');  // eslint-disable-line no-useless-escape
-                    expect(res.body.url).to.eql('https://www.Thinkful.com');
-                    expect(res.body.description).to.eql('Bad image <img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.');
-                    expect(res.body.rating).to.eql('1');
-                });
+            it('GET /api/bookmarks/:bookmark_id responds with 200 and the specified article', () => {
+                const bookmarkId = 2;
+                const expectedbookmark = testBookmarks[bookmarkId - 1];
+                return supertest(app)
+                    .get(`/api/bookmarks/${bookmarkId}`)
+                    .set('Authorization', `Bearer ${process.env.API_Token}`)
+                    .expect(200, expectedbookmark);
+            });
         });
     });
 
-    context('Post /api/bookmarks', () => {
+    context('POST /api/bookmarks', () => {
         
         it('creates a bookmark, responding with 201 and the new bookmark', () => {
             
@@ -195,46 +180,50 @@ describe('Bookmarks Endpoints', () => {
         });
     });
 
-    context('DELETE /api/bookmarks/:bookmarksId', () => {
+    describe('DELETE /api/bookmarks/:bookmarkId', () => {
+
+        context('Given there is data in bookmarks', () => {
         
-        beforeEach('insert bookmarks', () => {
-            return db
-                .into('bookmarks')
-                .insert(testBookmarks);
+            beforeEach('insert bookmarks', () => {
+                return db
+                    .into('bookmarks')
+                    .insert(testBookmarks);
+            });
+    
+            it('responds with 204 and removes the bookmark', () => {
+    
+                const idToRemove = 2;
+    
+                const expectedBookmarks = testBookmarks.filter(bookmark => bookmark.id !== idToRemove);
+                return supertest(app)
+                    .delete(`/api/bookmarks/${idToRemove}`)
+                    .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                    .expect(204)
+                    .then(() => {
+                        supertest(app)
+                            .get('/api/bookmarks')
+                            .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                            .expect(expectedBookmarks);
+                    });
+            });
         });
-
-        it('responds with 204 and removes the bookmark', () => {
-
-            const idToRemove = 2;
-
-            const expectedBookmarks = testBookmarks.filter(bookmark => bookmark.id !== idToRemove);
-            return supertest(app)
-                .delete(`/api/bookmarks/${idToRemove}`)
-                .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
-                .expect(204)
-                .then(() => {
-                    supertest(app)
-                        .get('/api/bookmarks')
-                        .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
-                        .expect(expectedBookmarks);
-                });
+    
+        context('Given no bookmarks', () => {
+            it('responds with 404', () => {
+                
+                const bookmarkId = 1234567890;
+    
+                return supertest(app)
+                    .delete(`/api/bookmarks/${bookmarkId}`)
+                    .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+                    .expect(404, {
+                        error: { message: `Bookmark doesn't exist`} // eslint-disable-line quotes
+                    });
+    
+            });
         });
     });
-
-    context('Delete /api/bookmarks/:bookmarksId Given no bookmarks', () => {
-        it('responds with 404', () => {
-            
-            const bookmarkId = 1234567890;
-
-            return supertest(app)
-                .delete(`/api/bookmarks/${bookmarkId}`)
-                .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
-                .expect(404, {
-                    error: { message: `Bookmark doesn't exist`} // eslint-disable-line quotes
-                });
-
-        });
-    });
+    
 
     describe('PATCH /api/bookmarks/;bookmarkId', () => {
         
@@ -330,6 +319,36 @@ describe('Bookmarks Endpoints', () => {
                     });
             });
 
+        });
+    });
+
+    context('Given an XSS attack article', () => {
+
+        const maliciousArticle = {
+            id: 911,
+            title: 'Naughty naughty very naughty <script>alert("xss");</script>',
+            url: 'https://www.Thinkful.com',
+            description: 'Bad image <img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.',
+            rating: '1'
+        };
+
+        beforeEach('insert malicious article', () => {
+            return db
+                .into('bookmarks')
+                .insert([ maliciousArticle ]);
+        });
+
+        it('removes XSS attack content', () => {
+            return supertest(app)
+                .get(`/api/bookmarks/${maliciousArticle.id}`)
+                .set('Authorization', `Bearer ${process.env.API_Token}`)
+                .expect(200)
+                .expect(res => {
+                    expect(res.body.title).to.eql('Naughty naughty very naughty &lt;script&gt;alert(\"xss\");&lt;/script&gt;');  // eslint-disable-line no-useless-escape
+                    expect(res.body.url).to.eql('https://www.Thinkful.com');
+                    expect(res.body.description).to.eql('Bad image <img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.');
+                    expect(res.body.rating).to.eql('1');
+                });
         });
     });
 });

@@ -110,7 +110,7 @@ bookmarksRouter
             req.params.bookmarkId,
             bookmarkToUpdate
         )
-            .then(numRowsAffected => {
+            .then( () => {
                 res.status(204).end();
             })
             .catch(next);
