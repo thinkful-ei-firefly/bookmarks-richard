@@ -1,0 +1,15 @@
+{"message":"title is not defined","level":"error"}
+{"message":"title is not defined","level":"error"}
+{"message":"title is not defined","level":"error"}
+{"message":"title is not defined","level":"error"}
+{"message":"title is not defined","level":"error"}
+{"message":"insert into \"bookmarks\" (\"desc\", \"rating\", \"title\", \"url\") values (DEFAULT, $1, $2, $3) returning * - column \"desc\" of relation \"bookmarks\" does not exist","level":"error"}
+{"message":"newArticle is not defined","level":"error"}
+{"message":"newArticle is not defined","level":"error"}
+{"message":"newArticle is not defined","level":"error"}
+{"message":"key is not defined","level":"error"}
+{"message":"key is not defined","level":"error"}
+{"message":"key is not defined","level":"error"}
+{"message":"key is not defined","level":"error"}
+{"message":"BookmarksService.deleteArticle is not a function","level":"error"}
+{"message":"BookmarksService.deleteArticle is not a function","level":"error"}
